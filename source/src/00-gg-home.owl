@@ -1,0 +1,211 @@
+face "otoh gunga" {
+  meta { owl: 10; description: "A home page for the Gungan swamp: the time in battle droid plates, Jar Jar among the wreckage, boomas for a battery and a pile of droids for your notifications"; version: "1.0"; license: "MIT"; category: "fun" }
+  page: 0
+  @font lilita
+  @assets jj_body jj_body_shock jj_body_sorry jj_body_talk jj_body_tongue jj_lip jj_jaw jj_blink jj_tongue jj_ear jj_ear_far jj_stalk jj_stalk_far d_leg d_torn d_arm d_head_x d_blaster d_head d_torso orb pole
+
+  source now = clock every 1s
+  source bat = android.battery
+  source n = android.notifications
+  source apps = android.apps
+
+  let hh = num(fmtTime(now, "H"))
+  let mm = num(fmtTime(now, "m"))
+  let level = bat.level ?? 0
+  let charging = bat.charging ?? false
+  let low = level < 20 && !charging
+  let count = n.count ?? 0
+  let wide = (tileWidth ?? 0) > (tileHeight ?? 1)
+  let top = (apps ?? []).filter(a => (!a.system || a.score > 0) && a.profile == null).sortBy(a => -a.score).take(wide ? 6 : 5)
+  let parts = [d_head, d_arm, d_torso, d_leg, d_blaster]
+
+  state line = 0 persist
+  state tapT = -10
+  @include phrases
+  let cur = lines[line % len(lines)]
+
+  background: linear(0, 0, 0, 1, [alpha(background, 0.5), alpha(background, 0.15), alpha(background, 0.7)])
+  padding: [12, 0]
+
+  @include digits
+  @include power
+  @include jarscene
+
+  component Card(pad = 10) {
+    Column {
+      padding: pad
+      frost: 18
+      background: alpha(background, 0.62)
+      border: 2
+      borderColor: alpha(accent, 0.35)
+      radius: 22
+    }
+  }
+
+  component ClockCard() {
+    Column {
+      padding: [14, 8]
+      gap: 2
+      frost: 18
+      background: alpha(background, 0.62)
+      border: 2
+      borderColor: alpha(accent, 0.35)
+      radius: 22
+      DroidTime { hh: hh; mm: mm; height: 96 }
+      Row {
+        gap: 8
+        align: center
+        Text { text: upper(fmtTime(now, "EEEE d MMMM")); font: lilita; fontSize: 15; color: bright_magenta; letterSpacing: 1; maxLines: 1 }
+        Image { src: pole; height: 14; weight: 1; fit: contain; opacity: 0.85 }
+      }
+    }
+  }
+
+  component JarCard() {
+    Column {
+      weight: 1
+      padding: 8
+      gap: 4
+      frost: 18
+      background: alpha(background, 0.5)
+      border: 2
+      borderColor: alpha(accent, 0.35)
+      radius: 22
+      onTap: { line = (line + 1 + random(len(lines) - 1)) % len(lines); tapT = time; haptic() }
+      Box {
+        height: 46
+        fill: width
+        background: alpha(background, 0.7)
+        border: 1.5
+        borderColor: alpha(accent, 0.7)
+        radius: 14
+        padding: [10, 4]
+        align: center
+        Text { text: cur.t; font: lilita; fontSize: 15; color: bright_foreground; maxLines: 2; align: center }
+      }
+      JarScene { mood: cur.m; tapT: tapT; goofy: cur.m != 2 && line % 3 != 1; say: len(cur.t); weight: 1 }
+    }
+  }
+
+  component PowerCard() {
+    Row {
+      padding: [12, 6]
+      gap: 8
+      align: center
+      frost: 18
+      background: alpha(background, 0.62)
+      border: 2
+      borderColor: alpha(accent, 0.35)
+      radius: 22
+      height: 84
+      Bandolier { level: level; charging: charging; weight: 1 }
+      Column {
+        width: 76
+        gap: 0
+        align: end
+        Text { text: "${round(level)}%"; font: lilita; fontSize: 30; color: low ? bright_red : charging ? bright_green : bright_blue; align: end; maxLines: 1 }
+        Text { text: charging ? "CHARGING" : low ? "LOW" : "ARMED"; style: label; color: charging ? green : low ? red : muted; letterSpacing: 1; align: end; maxLines: 1 }
+      }
+    }
+  }
+
+  component PileCard() {
+    Column {
+      padding: [12, 8]
+      gap: 4
+      frost: 18
+      background: alpha(background, 0.62)
+      border: 2
+      borderColor: alpha(accent, 0.35)
+      radius: 22
+      Row {
+        gap: 8
+        align: center
+        Text { text: "DROID PILE"; font: lilita; fontSize: 14; color: bright_magenta; letterSpacing: 2; weight: 1; maxLines: 1 }
+        Text { text: !n.available ? "needs access" : count == 0 ? "all deactivated" : "${count} down"; style: label; color: count == 0 ? green : yellow; maxLines: 1; onTap: if !n.available { notification("open", "") } }
+      }
+      if n.available && count > 0 {
+        for item, i in n.items.take(3) key item.key {
+          Row {
+            gap: 8
+            align: center
+            Image { src: parts[i % 5]; width: 26; height: 30; fit: contain; rotation: (hash(i) - 0.5) * 50 }
+            Column {
+              gap: 0
+              weight: 1
+              onTap: notification("open", item.key)
+              Text { text: "${upper(item.app)} · ${fmtAgo(item.time, now)}"; style: label; color: muted; maxLines: 1 }
+              Text { text: item.title; maxLines: 1; bold: true }
+            }
+            Box {
+              width: 28
+              height: 28
+              onTap: notification("dismiss", item.key)
+              Image { src: orb; width: 28; height: 28; fit: contain }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  component AppsRow() {
+    Row {
+      gap: 10
+      justify: spaceBetween
+      align: center
+      padding: [10, 6]
+      frost: 18
+      background: alpha(background, 0.62)
+      border: 2
+      borderColor: alpha(accent, 0.35)
+      radius: 22
+      for a in top key a.key {
+        Box {
+          width: 46
+          height: 46
+          radius: 23
+          background: alpha(bright_cyan, 0.08)
+          border: 2
+          borderColor: alpha(bright_cyan, 0.55)
+          align: center
+          onTap: androidApp(a.key)
+          Image { src: a.icon; width: 30; height: 30; fit: contain }
+        }
+      }
+      Box {
+        width: 46
+        height: 46
+        radius: 23
+        background: alpha(accent, 0.8)
+        border: 2
+        borderColor: alpha(bright_foreground, 0.6)
+        align: center
+        onTap: app("booma-blast")
+        Image { src: orb; width: 34; height: 34; fit: contain }
+      }
+    }
+  }
+
+  if wide {
+    Row {
+      gap: 10
+      fill: true
+      padding: [10, 0]
+      Column { gap: 10; weight: 1; ClockCard { }  PowerCard { }  PileCard { }  Spacer { weight: 1 }  AppsRow { } }
+      Column { gap: 10; weight: 1; JarCard { }  Spacer { height: screenInset } }
+    }
+  } else {
+    Column {
+      gap: 10
+      fill: true
+      padding: [10, 0]
+      ClockCard { }
+      JarCard { }
+      PowerCard { }
+      PileCard { }
+      AppsRow { }
+      Spacer { height: screenInset }
+    }
+  }
+}

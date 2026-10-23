@@ -1,0 +1,81 @@
+widget "droid pile" {
+  meta { owl: 10; description: "Notifications as a pile of broken battle droid parts: tap one to open it, blast it with a booma to clear it"; version: "1.0"; license: "MIT"; category: "productivity" }
+  page: 4
+  order: 3
+  size: 6x4
+  minSize: 3x3
+  padding: 10
+  @font lilita
+  @assets d_head d_arm d_leg d_torso d_blaster d_head_x orb pole
+
+  source n = android.notifications
+  source now = clock every 1m
+  let parts = [d_head, d_arm, d_torso, d_leg, d_blaster]
+  let count = n.count ?? 0
+
+  Column {
+    gap: 6
+    fill: true
+    Row {
+      gap: 8
+      align: center
+      Text { text: "DROID PILE"; font: lilita; fontSize: 16; color: bright_magenta; letterSpacing: 2; weight: 1; maxLines: 1 }
+      Text { text: count == 0 ? "clear" : "${count} down"; style: label; color: count == 0 ? green : yellow; maxLines: 1 }
+    }
+    Image { src: pole; height: 12; fill: width; fit: contain; opacity: 0.75 }
+    if !n.available {
+      Column {
+        weight: 1
+        justify: center
+        align: center
+        gap: 8
+        Image { src: d_head_x; height: 60; fit: contain }
+        Text { text: "the droids can't be counted without notification access"; style: small; align: center; color: muted }
+        Button { text: "allow"; onTap: notification("open", "") }
+      }
+    } else if count == 0 {
+      Column {
+        weight: 1
+        justify: center
+        align: center
+        gap: 6
+        Image { src: d_head; height: 64; fit: contain; opacity: 0.8; rotation: -14 }
+        Text { text: "All droids deactivated"; font: lilita; fontSize: 16; align: center; color: green }
+        Text { text: "nothing waiting"; style: label; align: center; color: muted }
+      }
+    } else {
+      Column {
+        gap: 8
+        weight: 1
+        scroll: true
+        for item, i in n.items key item.key {
+          Row {
+            gap: 10
+            align: center
+            Box {
+              width: 38
+              height: 42
+              Image { src: parts[i % 5]; width: 38; height: 42; fit: contain; rotation: (hash(i) - 0.5) * 50 }
+            }
+            Column {
+              gap: 0
+              weight: 1
+              onTap: notification("open", item.key)
+              Text { text: "${upper(item.app)} · ${fmtAgo(item.time, now)}"; style: label; color: muted; maxLines: 1 }
+              Text { text: item.title; bold: true; maxLines: 1 }
+              if item.text != "" { Text { text: item.text; style: small; color: foreground; maxLines: 2 } }
+            }
+            if item.clearable {
+              Box {
+                width: 34
+                height: 34
+                onTap: notification("dismiss", item.key)
+                Image { src: orb; width: 34; height: 34; fit: contain }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

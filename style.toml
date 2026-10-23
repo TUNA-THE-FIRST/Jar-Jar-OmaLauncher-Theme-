@@ -1,0 +1,23 @@
+version = 1
+theme = "gungan"
+background = "01-otoh-gunga-glow.png"
+
+[widgets]
+gaps-in = 8
+gaps-out = 8
+border-width = 2
+border = "#2c5a52"
+border-focused = "theme"
+
+[corners]
+scale = 1
+
+[status-bar]
+framed = true
+opacity = 0.8
+border-width = 2
+
+[navigation-bar]
+framed = true
+opacity = 0.8
+border-width = 2

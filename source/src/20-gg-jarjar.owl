@@ -1,0 +1,40 @@
+widget "jar jar" {
+  meta { owl: 10; description: "Jar Jar Binks standing in a heap of broken battle droids: tap him and he hops, flaps his ears and says something unwise"; version: "1.0"; license: "MIT"; category: "fun" }
+  page: 1
+  order: 4
+  size: 6x4
+  minSize: 3x3
+  padding: 8
+  @font lilita
+  @assets jj_body jj_body_shock jj_body_sorry jj_body_talk jj_body_tongue jj_lip jj_jaw jj_blink jj_tongue jj_ear jj_ear_far jj_stalk jj_stalk_far d_leg d_torn d_arm d_head_x d_blaster
+
+  state line = 0 persist
+  state tapT = -10
+  state taps = 0 persist
+  @include phrases
+  let cur = lines[line % len(lines)]
+  onTap: { line = (line + 1 + random(len(lines) - 1)) % len(lines); tapT = time; taps = taps + 1; haptic() }
+
+  @include jarscene
+
+  Column {
+    gap: 4
+    fill: true
+    Box {
+      height: 54
+      fill: width
+      background: alpha(background, 0.7)
+      border: 1.5
+      borderColor: alpha(accent, 0.7)
+      radius: 16
+      padding: [12, 6]
+      align: center
+      Text { text: cur.t; font: lilita; fontSize: 16; color: bright_foreground; maxLines: 2; align: center }
+    }
+    JarScene { mood: cur.m; tapT: tapT; goofy: cur.m != 2 && line % 3 != 1; say: len(cur.t); weight: 1 }
+    Row {
+      Text { text: "tap him"; style: label; color: muted; weight: 1 }
+      Text { text: "${taps} oopsies"; style: label; color: bright_magenta; maxLines: 1 }
+    }
+  }
+}

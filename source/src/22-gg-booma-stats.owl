@@ -1,0 +1,84 @@
+widget "booma blast" {
+  meta { owl: 10; description: "Stats for Booma Blast, a Linux game of flinging Gungan boomas at battle droids. Tap to play."; version: "1.0"; license: "MIT"; category: "games" }
+  page: 1
+  order: 1
+  size: 6x3
+  minSize: 4x3
+  padding: 0
+  requires { pacman: ["love"] }
+  @font lilita
+  @assets jj_body jj_body_shock jj_body_sorry jj_body_talk jj_body_tongue jj_lip jj_jaw jj_blink jj_tongue jj_ear jj_ear_far jj_stalk jj_stalk_far orb
+
+  source st = file("~/.local/share/booma-blast/stats.json") json
+  let have = st != null && st != ""
+  let cleared = have ? st.cleared ?? 0 : 0
+  let levels = have ? st.levels ?? 5 : 5
+  let stars = have ? st.stars ?? 0 : 0
+  let maxStars = have ? st.max_stars ?? 15 : 15
+  let ls = have ? st.level_stars ?? [0, 0, 0, 0, 0] : [0, 0, 0, 0, 0]
+  onTap: app("booma-blast")
+
+  component Stat(label, value, tint = foreground) {
+    Column {
+      gap: 0
+      weight: 1
+      Text { text: label; fontSize: 10; color: muted; letterSpacing: 1; maxLines: 1 }
+      Text { text: value; font: lilita; fontSize: 16; color: tint; maxLines: 1 }
+    }
+  }
+
+  Box {
+    fill: true
+    Row {
+      fill: true
+      padding: [8, 6]
+      gap: 6
+      Canvas {
+        width: 118
+        fill: height
+        let s = min(height * 0.98 / 350, width * 0.9 / 300)
+        let bx = width * 0.5 - 150 * s
+        let by = height * 0.02
+        let jmood = 0
+        let jflap = 0
+        let jsq = 0
+        let jtalk = false
+        let jtp = 0
+        circle(width / 2, height * 0.62, height * 0.4, fill: alpha(accent, 0.08))
+        @include jarparts
+      }
+      Column {
+        weight: 1
+        gap: 1
+        justify: center
+        Row {
+          align: center
+          gap: 8
+          Text { text: "BOOMA BLAST"; font: lilita; fontSize: 18; color: bright_blue; letterSpacing: 1; weight: 1; maxLines: 1 }
+          Image { src: orb; size: 22; fit: contain }
+        }
+        if have {
+          Row { gap: 8; Stat { label: "LEVELS"; value: "${cleared}/${levels}" }  Stat { label: "STARS"; value: "${stars}/${maxStars}"; tint: bright_yellow } }
+          Row { gap: 8; Stat { label: "DROIDS"; value: fmtNum(st.droids ?? 0); tint: orange }  Stat { label: "SHOTS"; value: fmtNum(st.shots ?? 0) } }
+          Row { gap: 8; Stat { label: "BEST"; value: fmtNum(st.best_total ?? 0); tint: bright_magenta }  Stat { label: "PLAYED"; value: fmtDuration(st.seconds ?? 0) } }
+        } else {
+          Text { text: "no battles yet. mesa ready!"; style: small; color: muted }
+        }
+        Canvas {
+          height: 18
+          fill: width
+          for i in range(5) {
+            let cw = (width - 4 * 6) / 5
+            let x0 = i * (cw + 6)
+            rect(x0, 0, cw, height, radius: 6, fill: alpha(foreground, 0.06), stroke: alpha(accent, ls[i] > 0 ? 0.7 : 0.2), width: 1.5)
+            for k in range(3) {
+              let cx = x0 + cw / 2 + (k - 1) * 11
+              let pts = range(10).map(j => [cx + (j % 2 == 0 ? 5 : 2.2) * cos(rad(-90 + j * 36)), 9.5 + (j % 2 == 0 ? 5 : 2.2) * sin(rad(-90 + j * 36))])
+              path(pts, closed: true, fill: ls[i] > k ? bright_yellow : alpha(foreground, 0.14))
+            }
+          }
+        }
+      }
+    }
+  }
+}

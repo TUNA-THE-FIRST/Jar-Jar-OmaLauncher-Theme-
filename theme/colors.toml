@@ -1,0 +1,32 @@
+# Gungan swamp: dull murky greens, Gungan-skin pink and the cold blue of a booma.
+# Dark and a little luminous, so the art glows and the launcher stays quiet.
+
+mode = "dark"
+accent = "#4fa6d6"
+selection = "#1d3b44"
+muted = "#5e7f78"
+cursor = "#9ad7f2"
+background = "#0e1a19"
+dark_background = "#0a1413"
+darker_background = "#070f0e"
+lighter_background = "#17292a"
+foreground = "#c5d4c2"
+dark_foreground = "#7f9a90"
+light_foreground = "#dbe6d6"
+bright_foreground = "#eaf3e6"
+
+red = "#b0575a"
+yellow = "#c0a263"
+orange = "#c08658"
+green = "#5f9a6a"
+cyan = "#5fb0b0"
+blue = "#4a8fc4"
+magenta = "#c98b9a"
+brown = "#7b5a3a"
+
+bright_red = "#cf7478"
+bright_yellow = "#d9bd7c"
+bright_green = "#7fbb88"
+bright_cyan = "#80cfcf"
+bright_blue = "#6cb4ea"
+bright_magenta = "#e3a3b1"

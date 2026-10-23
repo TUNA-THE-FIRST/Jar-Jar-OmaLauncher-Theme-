@@ -1,0 +1,35 @@
+widget "droid clock" {
+  meta { owl: 10; description: "The time as plates torn off a battle droid, with a booma for a colon and a cracked droid head keeping watch"; version: "1.0"; license: "MIT"; category: "time" }
+  page: 1
+  order: 2
+  size: 6x2
+  minSize: 4x2
+  padding: 8
+  @font lilita
+  @assets d_head_x pole
+
+  source now = clock every 1s
+  let hh = num(fmtTime(now, "H"))
+  let mm = num(fmtTime(now, "m"))
+
+  @include digits
+
+  Row {
+    gap: 6
+    fill: true
+    align: center
+    Column {
+      weight: 1
+      fill: height
+      gap: 2
+      DroidTime { hh: hh; mm: mm; weight: 1 }
+      Row {
+        gap: 8
+        align: center
+        Text { text: upper(fmtTime(now, "EEE d MMM")); font: lilita; fontSize: 14; color: bright_magenta; letterSpacing: 1; maxLines: 1 }
+        Image { src: pole; height: 14; width: 150; fit: contain; opacity: 0.9 }
+      }
+    }
+    Image { src: d_head_x; width: 44; height: 70; fit: contain; rotation: 12 }
+  }
+}

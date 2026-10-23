@@ -1,0 +1,88 @@
+widget "droid junkyard" {
+  meta { owl: 10; description: "A junkyard of broken battle droid parts with Jar Jar watching nervously: tap a part and it gets bonked across the yard"; version: "1.0"; license: "MIT"; category: "fun" }
+  page: 4
+  order: 5
+  size: 6x3
+  minSize: 4x2
+  padding: 0
+  @font lilita
+  @assets jj_body jj_body_shock jj_body_sorry jj_body_talk jj_body_tongue jj_lip jj_jaw jj_blink jj_tongue jj_ear jj_ear_far jj_stalk jj_stalk_far d_head_x d_torn d_arm d_leg d_blaster
+
+  state slots = [[0.14, 0.7, -14], [0.3, 0.78, 10], [0.55, 0.64, 72], [0.64, 0.3, -35], [0.58, 0.88, 8]] 
+  state from = [0.5, 0.5, 0]
+  state to = [0.5, 0.5, 0]
+  state kick = -1
+  state kickT = -10
+  state bonks = 0 persist
+  let quips = ["Bonk!", "Boing!", "Oopsie!", "Clumsy me!", "Mesa sorry!", "Whoops!"]
+  let W = tileWidth ?? 400
+  let Ht = tileHeight ?? 160
+
+  Box {
+    fill: true
+    align: topStart
+    Canvas {
+      let k = height / 250
+      let dt = time - kickT
+      let flying = kick >= 0 && dt >= 0 && dt < 0.9
+      let e = clamp(dt / 0.9, 0, 1)
+      let imgs = [d_head_x, d_torn, d_arm, d_leg, d_blaster]
+      let dims = [[70, 110], [77, 106], [26, 116], [36, 130], [82, 36]]
+      // Jar Jar, wide-eyed, at the right edge
+      let s = height * 0.66 / 350
+      let bx = width * 0.84 - 150 * s
+      let by = height * 0.08 - (flying ? sin(e * 3.14) * 6 : 0)
+      let jmood = dt >= 0 && dt < 1.6 ? 1 : 0
+      let jflap = dt >= 0 && dt < 1.4 ? sin(dt * 17) * 14 * pow(1 - dt / 1.4, 2) : 0
+      let jsq = dt >= 0 && dt < 0.5 ? sin(dt * 20) * 0.07 * (1 - dt / 0.5) : 0
+      let jtalk = dt >= 0 && dt < 1.2
+      let jtp = 0
+      @include jarparts
+      for i in range(5) {
+        let sl = slots[i]
+        let mine = flying && kick == i
+        let px = mine ? lerp(from[0], to[0], e) : sl[0]
+        let py = mine ? lerp(from[1], to[1], e) - sin(e * 3.1416) * 0.45 : sl[1]
+        let rot = mine ? lerp(from[2], to[2], e) + e * 540 : sl[2]
+        let w = dims[i][0] * k
+        let h = dims[i][1] * k
+        rotate(rot, px * width, py * height) { image(imgs[i], px * width - w / 2, py * height - h / 2, w, h) }
+      }
+      // sparks where the kicked part has landed
+      if kick >= 0 && dt >= 0.9 && dt < 1.4 {
+        let q = (dt - 0.9) / 0.5
+        for j in range(7) {
+          let a = j * 0.9 + hash(j) * 2
+          let ex = to[0] * width + cos(a) * 26 * q
+          let ey = to[1] * height + sin(a) * 26 * q
+          line(to[0] * width + cos(a) * 8 * q, to[1] * height + sin(a) * 8 * q, ex, ey, stroke: alpha(bright_yellow, 1 - q), width: 2.2, cap: round)
+        }
+      }
+    }
+    for i in range(5) {
+      Box {
+        width: 78
+        height: 78
+        align: topStart
+        offset: [slots[i][0] * W - 39, slots[i][1] * Ht - 39]
+        onTap: {
+          let dest = [random(10, 66) / 100, random(30, 90) / 100, random(-40, 40)]
+          from = slots[i]
+          to = dest
+          kick = i
+          kickT = time
+          slots = set(slots, i, dest)
+          bonks = bonks + 1
+          haptic()
+        }
+      }
+    }
+    Column {
+      padding: [14, 10]
+      gap: 0
+      Text { text: "DROID JUNKYARD"; font: lilita; fontSize: 14; color: muted; letterSpacing: 2; maxLines: 1 }
+      Text { text: bonks == 0 ? "bonk a droid part!" : quips[bonks % len(quips)]; font: lilita; fontSize: 22; color: bright_yellow; maxLines: 1 }
+      Text { text: "${bonks} bonked"; style: label; color: bright_magenta; maxLines: 1 }
+    }
+  }
+}
